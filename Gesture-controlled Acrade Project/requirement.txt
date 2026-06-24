@@ -1,77 +1,61 @@
+Why We Need Specific Older Versions
+
+Before we jump into the setup, you might be wondering why we are specifically targeting 
+Python 3.10 and MediaPipe 0.10.14 instead of just clicking "download latest."
+In the Python ecosystem, newer doesn't automatically mean better. The newest updates
+to MediaPipe have started transitioning away from the classic "Solutions API" (which 
+our code relies on for hand tracking) toward a new system. If we use the absolute newest
+versions of Python and MediaPipe, the code might break or spam the terminal with annoying 
+"legacy" warnings. By strictly locking down Python 3.10 and MediaPipe 0.10.14, we guarantee 
+a perfectly stable environment where our gesture-control code will run flawlessly on the 
+first try without any version conflicts.
+
+
+
 Python 3.10 Environment Setup Guide
 
+Step 1: Download & Install Python 3.10
 
-❓ Why Specific Older Versions?
-
-You might wonder why we target Python 3.10 and MediaPipe 0.10.14 instead of just installing the latest versions.
-
-The newest updates to MediaPipe have started transitioning away from the classic Solutions API (which our hand-tracking code relies on) toward a new system. Using the latest versions may cause the code to break or spam the terminal with "legacy" warnings.
-
-By locking down Python 3.10 and MediaPipe 0.10.14, we guarantee a stable environment where the gesture-control code runs flawlessly on the first try — no version conflicts.
-
-
-🐍 Step 1: Download & Install Python 3.10
-
-
-Go to the official website: python.org/downloads
-Look for Python 3.10.x (e.g., 3.10.11) and download the installer for your OS (Windows 64-bit recommended)
-Run the downloaded .exe installer
-
-
-⚠️ Important: Leave the "Add python.exe to PATH" checkbox unchecked
+1)Go to the official website: python.org/downloads.
+2)Look for Python 3.10.x (any stable release under 3.10, such as 3.10.11) and download the 
+installer for your operating system (e.g., Windows Installer 64-bit).
+3)Run the downloaded .exe installer.
+Important: As requested, leave the "Add python.exe to PATH" checkbox unchecked.
+4)Click Install Now and complete the installation.
 
 
 
+Step 2: Open a Fresh Project Folder
 
-Click Install Now and complete the installation
-
-
-
-📁 Step 2: Open a Fresh Project Folder
-
-
-Create a new folder on your computer and name it after your project (e.g., Gesture_Arcade)
-Open Visual Studio Code
-Go to File > Open Folder and select your new folder
+1)Create a brand-new folder on your computer and name it after your project (e.g., Gesture_Arcade).
+2)Open your code editor (like Visual Studio Code).
+3)Go to File > Open Folder and select your new folder.
 
 
 
-🔧 Step 3: Create a Virtual Environment
+Step 3: Creating a New Environment
 
-
-Open the Command Palette with Ctrl + Shift + P
-Type and select: Python: Select Interpreter
-Click Create virtual environment → Venv → Select Python 3.10 (64-bit)
-Name the folder .venv and hit Enter
-
-
-
-📦 Step 4: Install Packages
-
-
-Open a new terminal in VS Code
-Make sure (.venv) appears at the start of the terminal line
-If not, activate the environment manually:
-
-
-bash   .\.venv\Scripts\Activate
-
-
-If that doesn't work, look up the activation command for your specific terminal type (PowerShell, CMD, Git Bash, etc.)
+1)In VS Code, open the Command Palette by pressing Ctrl + Shift + P.
+2)Type and select: Python: Select Interpreter.
+3)Click on Create virtual environment > Click Venv creates a '.venv' folder... > Select Python 3.10 (64-bit).
+4)Name the folder as .venv and hit enter.
 
 
 
+Step 4: Installing Packages
 
-Run the following install command:
+1)Open a new terminal. Make sure that (.venv) appears at the start of the line in the terminal. 
+If not, write .\.venv\Scripts\Activate and hit enter.
+2)If that doesn't work, you can use other venv activating commands which can be found on the internet 
+depending on your terminal type.
+3)Write pip install numpy matplotlib opencv-python mediapipe==0.10.14 pycaw and hit enter.
 
 
-bash   pip install numpy matplotlib opencv-python mediapipe==0.10.14 pycaw
 
-
-✅ You're Ready to Code!
-
-Once the installation finishes, your isolated environment is fully configured with every dependency needed to run the project — from core math logic to real-time computer vision and audio controls.
-
-Simply drop your project code into the folder, hit Run, and it will work.
+You Are Ready to Code!
+And that is it! Once that final installation command finishes running, your isolated environment is perfectly 
+configured. This setup contains absolutely every dependency you need to run the project. From the core math 
+logic to the real-time computer vision and audio controls, everything is wired up. All that is left to do 
+is drop your project code into the folder, hit run, and it will work flawlessly!
 
 
