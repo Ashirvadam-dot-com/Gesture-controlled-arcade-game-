@@ -4,7 +4,7 @@ Real-time hand gesture recognition from a live webcam feed using Python, OpenCV,
 
 ---
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 ├── submission.py               # Task submission — single hand gesture detection
@@ -16,7 +16,7 @@ Real-time hand gesture recognition from a live webcam feed using Python, OpenCV,
 
 ---
 
-## 📌 Week 3 & 4 — Task (`submission.py`)
+## Week 3 & 4 — Task (`submission.py`)
 
 The assigned task was to build a gesture detection system for a **single hand** using MediaPipe landmarks. The program detects the hand from a live webcam feed, classifies the gesture in real time, and displays the label on screen.
 
@@ -24,7 +24,7 @@ Gesture classification works by checking the state of each finger — whether it
 
 ---
 
-## 💡 Personal Extension (`main.py`)
+## Personal Extension (`main.py`)
 
 Going beyond the task, `main.py` extends the system to track **both hands simultaneously**. Each hand is independently classified and displayed on its own side of the screen (left / right), with a live FPS counter.
 
@@ -34,7 +34,7 @@ Additional files `Gestures.py` and `mediapipe_setup.py` were written to keep the
 
 ---
 
-## 🖐️ Gestures Supported
+## Gestures Supported
 
 | Gesture | Trigger |
 |---|---|
@@ -48,13 +48,13 @@ Additional files `Gestures.py` and `mediapipe_setup.py` were written to keep the
 
 ---
 
-## 🛠️ Requirements
+## Requirements
 
 ```bash
 pip install opencv-python mediapipe
 ```
 
-## ▶️ Usage
+## Usage
 
 ```bash
 python submission.py   # week 3 & 4 task
