@@ -1,13 +1,14 @@
-This week covered open-CV and mediapipe.
+This week's work covered OpenCV and MediaPipe.<br>
 
+Images & Videos:
 
-<br>Images & videos : This folder contains the images and videos that used as an
-<br>                  example throughtout the open-CV course.
-<br>
+This folder contains the images and videos used as examples throughout the OpenCV course.<br>
 
-Media pipe : IN this folder there are mini projects like volume control through hand gesture and workout reps counter (pose_gym_count.py)
-<br>
+MediaPipe:
 
-Open-CV : This folder contains all the work done in open-CV including a mini project of face detection and recognition
+This folder contains mini-projects, including a volume control system via hand gestures and a workout repetitions counter (pose_gym_count.py).<br>
 
+OpenCV:
+
+This folder contains all work completed in OpenCV, including a mini-project on face detection and recognition.
 
