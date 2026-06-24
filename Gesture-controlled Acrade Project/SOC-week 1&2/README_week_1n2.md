@@ -4,11 +4,11 @@ This week's work covered the fundamentals of OpenCV and MediaPipe, organized int
 
 
 ## Project Structure
-
+```
 ├── Images & Videos/        # Sample media used throughout the OpenCV course
 ├── OpenCV/                 # All OpenCV coursework including a face detection mini-project
 └── MediaPipe/              # Mini-projects using hand and pose tracking
-
+```
 
 ## Images & Videos
 
