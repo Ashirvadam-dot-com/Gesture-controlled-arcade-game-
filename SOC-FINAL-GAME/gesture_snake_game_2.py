@@ -72,7 +72,9 @@ def hand_oreo(lm_list , hand_label):
         gesture = 'OPEN PALM'
     elif finger_oreo == [0, 1, 1, 0, 0]:
         gesture = 'PEACE'
-    else :
+    elif finger_oreo==[0,1,0,0,0]:
+        gesture= "POINTING"
+    elif hand_label == "Right" :
         current_point = lm_list[8][1:]
     
         dx = current_point[0] - previous_point[0]
@@ -98,6 +100,7 @@ def hand_oreo(lm_list , hand_label):
         gesture = "RIGHT" if right_count > 2 else gesture
         gesture = "UP" if up_count > 2 else gesture
         gesture = "DOWN" if down_count > 2 else gesture
+    return gesture
     
         
 CELL_SIZE   =   30
@@ -196,6 +199,14 @@ def main():
                     PREVIOUS_GESTURE[hand_label] = gesture
                 if GESTURE_COUNT[hand_label] > STABILITY_FRAMES :
                     STABLE_GESTURE[hand_label] = gesture
+                    
+                for i , point in enumerate (trail_points):
+                            radius = max(1, (12-i//2))
+                            blue = max(210, 250 - (i*2))
+                            green = max(50, 195-(i*8))
+                            red = max(10, 140 - (i*7))
+                            color = (blue, green, red)
+                            cv.circle(img, point , radius , color, -1)
                     
         ##  EVENT HANDLING
         for event in pygame.event.get():
