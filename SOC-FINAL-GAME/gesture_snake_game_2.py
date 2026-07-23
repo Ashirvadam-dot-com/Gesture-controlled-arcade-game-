@@ -20,19 +20,6 @@ hands=mp_hands.Hands(
     min_tracking_confidence   =   0.5
 )
 
-## LANDMARK STYLE 
-landmark_style = mp_drawing_tools.DrawingSpec(
-    color = (255, 0, 0),
-    thickness = -1,
-    circle_radius = 5
-)
-
-## CONNECTION STYLE 
-connection_style = mp_drawing_tools.DrawingSpec(
-    color = (255, 255, 255),
-    thickness = 3
-)
-
 
 ## CORDINATES OF LANDMARKS
 def get_cordinates(img, hand_landmark):
@@ -190,6 +177,9 @@ def main():
     ptime = 0
     
     GESTURE   = {'Left' :'NONE', 'Right' :'NONE'}
+    PREVIOUS_GESTURE = {'Left' :'NONE', 'Right' :'NONE'}
+    GESTURE_COUNT    = {'Left' :0 , 'Right' :0}
+    STABILITY_FRAMES = 5
     swipe_gesture = {'Left' :'NONE', 'Right' :'NONE'}
     while True:
         success, frame = cap.read()
@@ -200,11 +190,23 @@ def main():
         rgb_img = cv.cvtColor(img, cv.COLOR_BGR2RGB)
         
         results = hands.process(rgb_img)
+        hands_present_this_frame = []
+        
         if results.multi_handedness and results.multi_hand_landmarks :
             for handedness , hand_landmark in zip( results.multi_handedness , results.multi_hand_landmarks ):             
                 hand_label = handedness.classification[0].label
                 lm_list    = get_cordinates(img, hand_landmark)
-                GESTURE[hand_label] = finger_oreo_hand(lm_list, hand_label)
+                gesture = finger_oreo_hand(lm_list, hand_label)
+                hands_present_this_frame.append(hand_label)
+                
+                if gesture == PREVIOUS_GESTURE[hand_label]:
+                    GESTURE_COUNT[hand_label] +=1
+                else :
+                    GESTURE_COUNT[hand_label]    = 1
+                    PREVIOUS_GESTURE[hand_label] = gesture
+                if GESTURE_COUNT[hand_label] > STABILITY_FRAMES :
+                    GESTURE[hand_label] = gesture
+                
                 if hand_label == "Right" :
                     swipe_gesture[hand_label] = dynamic_gesture(lm_list)
                 
@@ -216,8 +218,24 @@ def main():
                             red = max(10, 140 - (i*7))
                             color = (blue, green, red)
                             cv.circle(img, point , radius , color, -1)
+                            
+            if "Left" not in hands_present_this_frame:
+                GESTURE['Left'] = 'NONE'
+                PREVIOUS_GESTURE['Left'] = 'NONE'
+                GESTURE_COUNT['Left'] = 0
+                
+            if "Right" not in hands_present_this_frame:
+                GESTURE['Right'] = 'NONE'
+                PREVIOUS_GESTURE['Right'] = 'NONE'
+                GESTURE_COUNT['Right'] = 0
+                swipe_gesture['Right'] = 'NONE'
+                trail_points.clear()
         else : 
             trail_points.clear()
+            swipe_gesture = {'Left' :'NONE', 'Right' :'NONE'}
+            GESTURE   = {'Left' :'NONE', 'Right' :'NONE'}
+            
+            
         ##  EVENT HANDLING
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -257,7 +275,7 @@ def main():
                 elif swipe_gesture['Right'] == 'RIGHT' and direction != (-1, 0) :
                     direction = (1, 0)
             else :
-                if swipe_gesture['Right'] in ["UP", "DOWN", "LEFT", "RIGHT"]:
+                if GESTURE['Left'] == "FIST":
                     GAME_PAUSED = False
                     
         current_time = pygame.time.get_ticks()
@@ -346,6 +364,7 @@ def main():
         fps = 1/(ctime - ptime)
         ptime = ctime
         cv.putText(img, f"FPS : {int(fps)}", (img.shape[1]//2-50 , img.shape[0]-10 ), cv.FONT_HERSHEY_COMPLEX_SMALL, 1.2, (0, 0, 0), 2)
+        img = cv.resize(img, (640, 480))
         cv.imshow('vision tracker ',img)
         
         if cv.waitKey(1) & 0xFF==ord('q'):
