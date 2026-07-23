@@ -92,9 +92,9 @@ def finger_oreo_hand(lm_list,hand_label):
 current_point = (0,0)
 previous_point = current_point
 left_count , right_count , up_count , down_count = 0,0,0,0
-
+swipe = 'NONE'
 def dynamic_gesture( lm_list) :
-    global trail_points , current_point, previous_point
+    global trail_points , current_point, previous_point, swipe
     global left_count , right_count , up_count , down_count
     
     current_point = lm_list[8][1:]
@@ -104,7 +104,7 @@ def dynamic_gesture( lm_list) :
     
     previous_point   = current_point
     trail_points.appendleft(current_point)
-    swipe = 'NONE'
+    
     # horizontal swipe , left and right
     if -20 <= dy <= 20 :
         if dx < 0 :
@@ -216,7 +216,8 @@ def main():
                             red = max(10, 140 - (i*7))
                             color = (blue, green, red)
                             cv.circle(img, point , radius , color, -1)
-                    
+        else : 
+            trail_points.clear()
         ##  EVENT HANDLING
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -245,7 +246,7 @@ def main():
                 
         else :
             if not GAME_PAUSED :
-                if GESTURE['Right'] == 'PEACE' :
+                if GESTURE['Left'] == 'OPEN PALM' :
                     GAME_PAUSED = True 
                 elif swipe_gesture['Right'] == 'UP' and direction != (0, 1):
                     direction = (0, -1)
@@ -306,7 +307,7 @@ def main():
                 color = SNAKE_HEAD if i == 0 else SNAKE_BODY
                 draw_cell(screen , color , part)
                 
-            score_surf = SMALL_FONT.render(f"Score: {score} | Swipe gesture: {swipe_gesture}", True, TEXT_COLOR)
+            score_surf = SMALL_FONT.render(f"Score: {score} | Swipe gesture: {swipe_gesture['Right']}", True, TEXT_COLOR)
             hs_surf = SMALL_FONT.render(f"Best: {HIGH_SCORE}", True, (255, 215, 0))    # gold color
             screen.blit(score_surf, (8, 6))
             screen.blit(hs_surf, (WIDTH - hs_surf.get_width() - 8, 6))    # pin to top right corner
