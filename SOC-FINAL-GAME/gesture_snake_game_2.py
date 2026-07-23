@@ -4,6 +4,7 @@ import pygame
 import time
 import random 
 import sys
+import math
 from collections import deque
 
 trail_points = deque(maxlen=20)
@@ -33,7 +34,6 @@ connection_style = mp_drawing_tools.DrawingSpec(
 )
 
 
-
 ## CORDINATES OF LANDMARKS
 def get_cordinates(img, hand_landmark):
     lm_list = []
@@ -45,62 +45,87 @@ def get_cordinates(img, hand_landmark):
         lm_list.append([id, cx, cy])
     return lm_list
 
+def normalised_distance(lm_list,p1,p2):
+    x1,y1=lm_list[p1][1],lm_list[p1][2]
+    x2,y2=lm_list[p2][1],lm_list[p2][2]
+    
+    distance=math.hypot(x2-x1,y2-y1)
+    
+    ref=math.hypot(lm_list[0][1]-lm_list[9][1],lm_list[0][2]-lm_list[9][2])
+    
+    if ref==0:
+        return distance
+    else:
+        return distance/ref
+
+
+## GESTURE CREATOR
+def finger_oreo_hand(lm_list,hand_label):
+    tips=[8,12,16,20] # except thumb
+
+    # normalised distance
+    distance=normalised_distance(lm_list,4,8)
+
+    Orientation=[]
+    if hand_label=="Right":
+        Orientation.append(1 if lm_list[3][1]>lm_list[4][1] else 0)
+    else :
+        Orientation.append(1 if lm_list[3][1]<lm_list[4][1] else 0)
+    for tip in tips :
+        Orientation.append(1 if lm_list[tip][2]<lm_list[tip-2][2] else 0)
+        
+    # orientation list has been created with 0's and 1's 
+    gesture="NONE"
+    if Orientation==[0,0,0,0,0]:
+        gesture= "FIST"
+    elif Orientation==[1,1,1,1,1]:
+        gesture= "OPEN PALM"
+    elif Orientation==[0,1,0,0,0]:
+        gesture= "POINTING"
+    elif Orientation==[0,1,1,0,0]:
+        gesture= "PEACE"
+    elif Orientation==[1,0,1,1,1]  and distance <0.25:
+        gesture ="PINCH"
+    
+    return gesture
+
 current_point = (0,0)
 previous_point = current_point
 left_count , right_count , up_count , down_count = 0,0,0,0
 
-## GESTURE CREATOR
-def hand_oreo(lm_list , hand_label):
-    global gesture , trail_points , current_point, previous_point
+def dynamic_gesture( lm_list) :
+    global trail_points , current_point, previous_point
     global left_count , right_count , up_count , down_count
-    finger_oreo = []
     
-    if hand_label == 'Right' :
-        finger_oreo.append( 1 if lm_list[2][1] > lm_list[4][1] else 0)
-    else :
-        finger_oreo.append( 1 if lm_list[2][1] < lm_list[4][1] else 0)
-    tips = [8, 12, 16, 20]
-    for tip in tips :
-        finger_oreo.append( 1 if lm_list[tip-2][2] > lm_list[tip][2] else 0)
-        
-    count = sum(finger_oreo)
-    gesture = 'NONE'
-
-    if count == 0:
-        gesture = 'FIST'
-    elif count == 5 :
-        gesture = 'OPEN PALM'
-    elif finger_oreo == [0, 1, 1, 0, 0]:
-        gesture = 'PEACE'
-    elif finger_oreo==[0,1,0,0,0]:
-        gesture= "POINTING"
-    elif hand_label == "Right" :
-        current_point = lm_list[8][1:]
+    current_point = lm_list[8][1:]
     
-        dx = current_point[0] - previous_point[0]
-        dy = current_point[1] - previous_point[1]
-        
-        previous_point   = current_point
-        # horizontal swipe , left and right
-        if -20 <= dy <= 20 :
-            if dx < 0 :
-                left_count +=1
-                right_count , up_count , down_count = 0,0,0
-            elif dx >=0 :
-                right_count +=1
-                left_count , up_count , down_count = 0,0,0
-        if -15 <= dx <= 15 :
-            if dy < 0 :
-                up_count +=1
-                right_count , left_count , down_count = 0,0,0
-            elif dy >= 0 :
-                down_count +=1
-                left_count , up_count , right_count = 0,0,0    
-        gesture = "LEFT" if left_count > 2 else gesture
-        gesture = "RIGHT" if right_count > 2 else gesture
-        gesture = "UP" if up_count > 2 else gesture
-        gesture = "DOWN" if down_count > 2 else gesture
-    return gesture
+    dx = current_point[0] - previous_point[0]
+    dy = current_point[1] - previous_point[1]
+    
+    previous_point   = current_point
+    trail_points.appendleft(current_point)
+    swipe = 'NONE'
+    # horizontal swipe , left and right
+    if -20 <= dy <= 20 :
+        if dx < 0 :
+            left_count +=1
+            right_count , up_count , down_count = 0,0,0
+        elif dx >=0 :
+            right_count +=1
+            left_count , up_count , down_count = 0,0,0
+    if -15 <= dx <= 15 :
+        if dy < 0 :
+            up_count +=1
+            right_count , left_count , down_count = 0,0,0
+        elif dy >= 0 :
+            down_count +=1
+            left_count , up_count , right_count = 0,0,0    
+    swipe = "LEFT" if left_count > 1 else swipe
+    swipe = "RIGHT" if right_count > 1 else swipe
+    swipe = "UP" if up_count > 1 else swipe
+    swipe = "DOWN" if down_count > 1 else swipe
+    
+    return swipe
     
         
 CELL_SIZE   =   30
@@ -159,16 +184,13 @@ def main():
     MOVE_DELAY_MIN   = 80
     
     
-    STABLE_GESTURE   = {'Left' :'NONE', 'Right' :'NONE'}
-    PREVIOUS_GESTURE = {'Left' :'NONE', 'Right' :'NONE'}
-    GESTURE_COUNT    = {'Left' :0 , 'Right' :0}
-    STABILITY_FRAMES = 5
-    
     cap = cv.VideoCapture(0)
     
     ctime = 0
     ptime = 0
     
+    GESTURE   = {'Left' :'NONE', 'Right' :'NONE'}
+    swipe_gesture = {'Left' :'NONE', 'Right' :'NONE'}
     while True:
         success, frame = cap.read()
         if not success:
@@ -179,26 +201,13 @@ def main():
         
         results = hands.process(rgb_img)
         if results.multi_handedness and results.multi_hand_landmarks :
-            for handedness , hand_landmark in zip( results.multi_handedness , results.multi_hand_landmarks ):
-                mp_drawing_tools.draw_landmarks(
-                    img,
-                    hand_landmark,
-                    mp_hands.HAND_CONNECTIONS,
-                    landmark_style,
-                    connection_style   
-                )
-                
+            for handedness , hand_landmark in zip( results.multi_handedness , results.multi_hand_landmarks ):             
                 hand_label = handedness.classification[0].label
                 lm_list    = get_cordinates(img, hand_landmark)
-                gesture = hand_oreo(lm_list, hand_label)
+                GESTURE[hand_label] = finger_oreo_hand(lm_list, hand_label)
+                if hand_label == "Right" :
+                    swipe_gesture[hand_label] = dynamic_gesture(lm_list)
                 
-                if gesture == PREVIOUS_GESTURE[hand_label]:
-                    GESTURE_COUNT[hand_label] +=1
-                else :
-                    GESTURE_COUNT[hand_label]    = 1
-                    PREVIOUS_GESTURE[hand_label] = gesture
-                if GESTURE_COUNT[hand_label] > STABILITY_FRAMES :
-                    STABLE_GESTURE[hand_label] = gesture
                     
                 for i , point in enumerate (trail_points):
                             radius = max(1, (12-i//2))
@@ -219,35 +228,35 @@ def main():
                     sys.exit()       
                 
         if not GAME_STARTED :
-            if STABLE_GESTURE['Left']== 'FIST' :
+            if GESTURE['Left']== 'FIST' :
                 GAME_STARTED = True
-                STABLE_GESTURE['Left'] = "NONE"
+                GESTURE['Left'] = "NONE"
                 MOVE_DELAY     = MOVE_DELAY_START
                 LAST_MOVE_TIME = pygame.time.get_ticks()
                 snake_pos, direction, score, food_pos = reset_game()
                 
         elif GAME_OVER :
-            if STABLE_GESTURE['Left'] == 'FIST' :
+            if GESTURE['Left'] == 'FIST' :
                 GAME_OVER , GAME_PAUSED = False, False
-                STABLE_GESTURE['Left'] = "NONE"
+                GESTURE['Left'] = "NONE"
                 MOVE_DELAY     = MOVE_DELAY_START
                 LAST_MOVE_TIME = pygame.time.get_ticks()
                 snake_pos, direction, score, food_pos = reset_game()
                 
         else :
             if not GAME_PAUSED :
-                if STABLE_GESTURE['Left'] == 'PEACE' :
+                if GESTURE['Right'] == 'PEACE' :
                     GAME_PAUSED = True 
-                elif STABLE_GESTURE['Right'] == 'UP' and direction != (0, 1):
+                elif swipe_gesture['Right'] == 'UP' and direction != (0, 1):
                     direction = (0, -1)
-                elif STABLE_GESTURE['Right'] == 'DOWN' and direction != (0, -1) :
+                elif swipe_gesture['Right'] == 'DOWN' and direction != (0, -1) :
                     direction = (0, 1)
-                elif STABLE_GESTURE['Right'] == 'LEFT' and direction != (1, 0) :
+                elif swipe_gesture['Right'] == 'LEFT' and direction != (1, 0) :
                     direction = (-1, 0)
-                elif STABLE_GESTURE['Right'] == 'RIGHT' and direction != (-1, 0) :
+                elif swipe_gesture['Right'] == 'RIGHT' and direction != (-1, 0) :
                     direction = (1, 0)
             else :
-                if STABLE_GESTURE['Right'] in ["UP", "DOWN", "LEFT", "RIGHT"]:
+                if swipe_gesture['Right'] in ["UP", "DOWN", "LEFT", "RIGHT"]:
                     GAME_PAUSED = False
                     
         current_time = pygame.time.get_ticks()
@@ -297,7 +306,7 @@ def main():
                 color = SNAKE_HEAD if i == 0 else SNAKE_BODY
                 draw_cell(screen , color , part)
                 
-            score_surf = SMALL_FONT.render(f"Score: {score} | Gesture: {STABLE_GESTURE}", True, TEXT_COLOR)
+            score_surf = SMALL_FONT.render(f"Score: {score} | Swipe gesture: {swipe_gesture}", True, TEXT_COLOR)
             hs_surf = SMALL_FONT.render(f"Best: {HIGH_SCORE}", True, (255, 215, 0))    # gold color
             screen.blit(score_surf, (8, 6))
             screen.blit(hs_surf, (WIDTH - hs_surf.get_width() - 8, 6))    # pin to top right corner
@@ -312,16 +321,25 @@ def main():
 
             if GAME_OVER:
                 msg = BIG_FONT.render("GAME OVER", True, FOOD_COLOR)
-                sub = MID_FONT.render("Make a FIST to restart", True, TEXT_COLOR)
+                sub = MID_FONT.render("Make a LEFT FIST to restart", True, TEXT_COLOR)
                 screen.blit(msg, (WIDTH//2 - msg.get_width()//2, HEIGHT//2 - 40))
                 screen.blit(sub, (WIDTH//2 - sub.get_width()//2, HEIGHT//2 + 15))  
                 
         pygame.display.flip()
         
         cv.putText(img, "LEFT HAND :", (10,30), cv.FONT_HERSHEY_COMPLEX_SMALL, 1.5, (0,0,0), 2)
-        cv.putText(img, "RIGHT HAND :", (img.shape[1]-260 ,30), cv.FONT_HERSHEY_COMPLEX_SMALL, 1.5, (0,0,0), 2)
-        cv.putText(img, f"{STABLE_GESTURE['Left']}", (10,70), cv.FONT_HERSHEY_PLAIN, 2, (255, 0, 0), 3)
-        cv.putText(img, f"{STABLE_GESTURE['Right']}", (img.shape[1]-260, 70), cv.FONT_HERSHEY_PLAIN, 2, (255, 0, 0), 3)
+        cv.putText(img, "Gesture :", (10,70), cv.FONT_HERSHEY_COMPLEX_SMALL, 1.5, (0,0,0), 2)
+        cv.putText(img, f"{GESTURE['Left']}", (180,70), cv.FONT_HERSHEY_COMPLEX_SMALL, 1.5, (255,0,0), 2)
+        cv.putText(img, "Swipe     :", (10,110), cv.FONT_HERSHEY_COMPLEX_SMALL, 1.5, (0,0,0), 2)
+        cv.putText(img, f"{swipe_gesture['Left']}", (180,110), cv.FONT_HERSHEY_COMPLEX_SMALL, 1.5, (255,0,0), 2)
+        
+        cv.putText(img, "RIGHT HAND :", (img.shape[1]-400 ,30), cv.FONT_HERSHEY_COMPLEX_SMALL, 1.5, (0,0,0), 2)
+        cv.putText(img, "Gesture :", (img.shape[1]-400,70), cv.FONT_HERSHEY_COMPLEX_SMALL, 1.5, (0,0,0), 2)
+        cv.putText(img, f"{GESTURE['Right']}", (img.shape[1]-230,70), cv.FONT_HERSHEY_COMPLEX_SMALL, 1.5, (255,0,0), 2)
+        cv.putText(img, "Swipe     :", (img.shape[1]-400,110), cv.FONT_HERSHEY_COMPLEX_SMALL, 1.5, (0,0,0), 2)
+        cv.putText(img, f"{swipe_gesture['Right']}", (img.shape[1]-230,110), cv.FONT_HERSHEY_COMPLEX_SMALL, 1.5, (255,0,0), 2)
+        
+        
         
         ctime = time.time()
         fps = 1/(ctime - ptime)
